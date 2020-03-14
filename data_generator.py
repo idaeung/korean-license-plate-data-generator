@@ -1,6 +1,7 @@
 import os
 import random as rnd
 from PIL import Image, ImageColor, ImageFont, ImageDraw, ImageOps
+import sys
 
 import data_augmentation
 
@@ -71,7 +72,7 @@ def get_round_corner(radius, fill):
     return corner
 
 def background_generator(size, radius, fill):
-    rect = Image.new('RGB', size, color=fill)
+    rect = Image.new('RGBA', size, color=fill)
     border_rect = ImageOps.expand(rect, border=1, fill='black')
     width, height = border_rect.size
 
@@ -84,12 +85,34 @@ def background_generator(size, radius, fill):
 
     return border_rect
 
+def augmentation_generator(img, augmentation_type):
+    # 1: skewing, 2: distortion, 3: blurring, 4: shadow, 5: all of them
+    aug_img = None
+    if augmentation_type == 1:
+        aug_img = data_augmentation.skewing(img)
+    elif augmentation_type == 2:
+        aug_img = data_augmentation.distortion(img)
+    elif augmentation_type == 3:
+        aug_img = data_augmentation.blurring(img)
+    elif augmentation_type == 4:
+        aug_img = data_augmentation.add_shadow(img)
+    elif augmentation_type == 5:
+        aug_img = data_augmentation.add_shadow(img)
+        aug_img = data_augmentation.skewing(aug_img)
+        # aug_img = data_augmentation.distortion(img)
+        aug_img = data_augmentation.blurring(aug_img)
+    else:
+        print('ERROR')
+
+    return aug_img
+
 def data_generator(
     index,
     hangul_list,
     num_list,
     font,
     out_dir,
+    augmentation_type,
     size,
     ratio,
     license_plate_type,
@@ -124,20 +147,27 @@ def data_generator(
     background_img.paste(original_img, (margin_left, margin_top), original_img)
     print('background_img size: ', background_img.size)
 
-    skewed_img = data_augmentation.skewing(original_img)
-    print('skewed size: ', skewed_img.size)
-    # skewed_img.show()
-
-    import sys
+    import cv2, imutils, numpy
+    cv2.imshow('numpy', imutils.resize(numpy.array(background_img), height=200))
+    cv2.imshow('gauss', imutils.resize(data_augmentation.noisy(background_img, 0), height=200))
+    cv2.imshow('poisson', imutils.resize(data_augmentation.noisy(background_img, 2), height=200))
+    cv2.imshow('speckle', imutils.resize(data_augmentation.noisy(background_img, 3), height=200))
+    cv2.waitKey()
+    # cv2.imshow('4', data_augmentation.noisy(background_img, 1))
+    # for i in range(4):
+    #     data_augmentation.noisy(background_img, i)
     sys.exit(1)
 
-    final_image = background_img
-    print('final_image size: ', final_image.size)
+    final_img = background_img
+    if augmentation_type:
+        final_img = augmentation_generator(background_img, augmentation_type)
+        # final_img.show()
+    print('final_image size: ', final_img.size)
 
     # Generate name for resulting image
     image_name = "{}_{}.{}".format(text, str(index), extension)
 
     # Save the image
-    final_image.convert("RGB").save(os.path.join(out_dir, image_name))
+    final_img.convert("RGB").save(os.path.join(out_dir, image_name))
 
 

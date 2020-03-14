@@ -1,69 +1,22 @@
-import cv2
-import numpy as np
+from PIL import Image, ImageFont, ImageDraw
 
-def rounded_rectangle(src, top_left, bottom_right, radius=1, color=255, thickness=1, line_type=cv2.LINE_AA):
-    #  corners:
-    #  p1 - p2
-    #  |     |
-    #  p4 - p3
+text = '58로 6324'
+font = ImageFont.truetype(r'C:\Windows\Fonts\Arial.ttf', 50)
+width, height = font.getsize(text)
 
-    p1 = top_left
-    p2 = (bottom_right[1], top_left[1])
-    p3 = (bottom_right[1], bottom_right[0])
-    p4 = (top_left[0], bottom_right[0])
+image2 = Image.new('RGBA', (width, height), (0, 0, 128, 0))
+draw2 = ImageDraw.Draw(image2)
+draw2.text((0, 0), text=text, font=font, fill=(0, 255, 128))
+image2 = image2.rotate(30, expand=1)
+print('image2.size: ', image2.size)
 
-    height = abs(bottom_right[0] - top_left[1])
+w, h = image2.size
+image1 = Image.new('RGBA', (w, h), (0, 128, 0, 0))
+image1.show()
+image2.show()
 
-    if radius > 1:
-        radius = 1
+px, py = 0, 0
+sx, sy = image2.size
+image1.paste(image2, (px, py, px + sx, py + sy), image2)
+image1.show()
 
-    corner_radius = int(radius * (height/2))
-
-    if thickness < 0:
-
-        #big rect
-        top_left_main_rect = (int(p1[0] + corner_radius), int(p1[1]))
-        bottom_right_main_rect = (int(p3[0] - corner_radius), int(p3[1]))
-
-        top_left_rect_left = (p1[0], p1[1] + corner_radius)
-        bottom_right_rect_left = (p4[0] + corner_radius, p4[1] - corner_radius)
-
-        top_left_rect_right = (p2[0] - corner_radius, p2[1] + corner_radius)
-        bottom_right_rect_right = (p3[0], p3[1] - corner_radius)
-
-        all_rects = [
-        [top_left_main_rect, bottom_right_main_rect],
-        [top_left_rect_left, bottom_right_rect_left],
-        [top_left_rect_right, bottom_right_rect_right]]
-        print('all_rect: ', all_rects)
-
-        [cv2.rectangle(src, rect[0], rect[1], color, thickness) for rect in all_rects]
-        cv2.imshow('src', src)
-
-    # draw straight lines
-    cv2.line(src, (p1[0] + corner_radius, p1[1]), (p2[0] - corner_radius, p2[1]), color, abs(thickness), line_type)
-    cv2.line(src, (p2[0], p2[1] + corner_radius), (p3[0], p3[1] - corner_radius), color, abs(thickness), line_type)
-    cv2.line(src, (p3[0] - corner_radius, p4[1]), (p4[0] + corner_radius, p3[1]), color, abs(thickness), line_type)
-    cv2.line(src, (p4[0], p4[1] - corner_radius), (p1[0], p1[1] + corner_radius), color, abs(thickness), line_type)
-    cv2.imshow('line', src)
-
-    # draw arcs
-    cv2.ellipse(src, (p1[0] + corner_radius, p1[1] + corner_radius), (corner_radius, corner_radius), 180.0, 0, 90, color ,thickness, line_type)
-    cv2.imshow('ellipse', src)
-    cv2.ellipse(src, (p2[0] - corner_radius, p2[1] + corner_radius), (corner_radius, corner_radius), 270.0, 0, 90, color , thickness, line_type)
-    cv2.ellipse(src, (p3[0] - corner_radius, p3[1] - corner_radius), (corner_radius, corner_radius), 0.0, 0, 90,   color , thickness, line_type)
-    cv2.ellipse(src, (p4[0] + corner_radius, p4[1] - corner_radius), (corner_radius, corner_radius), 90.0, 0, 90,  color , thickness, line_type)
-
-    return src
-
-image_size = (480, 600, 3)
-
-top_left = (0, 0)
-bottom_right = (image_size[0], image_size[1])
-color = (255, 255, 255)
-
-img = np.zeros(image_size)
-img = rounded_rectangle(img, top_left, bottom_right, color=color, radius=0.3, thickness=-1)
-
-cv2.imshow('rounded_rect', img)
-cv2.waitKey(0)

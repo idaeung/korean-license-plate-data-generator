@@ -36,7 +36,7 @@ def parse_arguments():
         "--num",
         type=int,
         help="The number of images to be created.",
-        default=3
+        default=1
     )
     parser.add_argument(
         "-t",
@@ -51,8 +51,8 @@ def parse_arguments():
         "--augmentation",
         type=int,
         help="Setting data augmentation options for skewing, distortion, blurring and brightness"
-             "0: no use, 1: skewing, 2: distortion, 3: blurring, 4: brightness, 5: all of them",
-        default=1
+             "0: no use, 1: skewing, 2: distortion, 3: blurring, 4: shadow, 5: all of them",
+        default=5
     )
 
     parser.add_argument(
@@ -156,6 +156,7 @@ def main():
             num_list,
             font_list[rnd.randrange(0, len(font_list))],
             args.output_dir,
+            args.augmentation,
             args.text_format,
             args.format_ratio,
             rnd.randrange(0, license_plate_len) if args.license_plate_type == 6 else args.license_plate_type,
